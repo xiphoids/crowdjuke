@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #111827;
+  --background: #002b2b;
+  --foreground: #e8e8e8;
 }
 
 @theme inline {
@@ -10,8 +10,51 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Canvas */
+  --color-canvas: #002b2b;
+  --color-canvas-elevated: #003d3d;
+
+  /* Brand gold */
+  --color-brand-gold: #FFD700;
+  --color-brand-gold-muted: #b89b00;
+
+  /* UI cyan */
+  --color-ui-cyan: #00E5FF;
+  --color-ui-cyan-muted: #009fbf;
+
+  /* Action red (vote / primary crowd choice) */
+  --color-action-red: #E63333;
+  --color-action-red-hover: #cc2020;
+
+  /* Text */
+  --color-text-primary: #e8e8e8;
+  --color-text-muted: #8eadad;
+
+  /* Landing hero (cream palette) */
+  --color-landing-bg: #F5F0E1;
+  --color-landing-ink: #1A1D23;
+  --color-landing-muted: #5C5A52;
+  --color-landing-border: #D6D1C0;
+  --color-landing-accent: #B89B00;
+  --color-landing-input-bg: #FFFDF7;
 }
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* ---- Keyframes ---- */
+
+@keyframes glow-breathe {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4)); }
+  50% { filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.5)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

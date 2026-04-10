@@ -66,7 +66,7 @@ export default function EventRoom({ code }: { code: string }) {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="animate-pulse text-gray-400 text-lg">
+        <p className="animate-pulse text-text-muted text-lg">
           Loading event&hellip;
         </p>
       </div>
@@ -76,15 +76,15 @@ export default function EventRoom({ code }: { code: string }) {
   if (error || !event) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-lg font-medium text-gray-700">
+        <p className="text-lg font-medium text-text-primary">
           {error ? "Something went wrong." : "Event not found."}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-text-muted">
           Double-check your event code and try again.
         </p>
         <Link
           href="/"
-          className="mt-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
+          className="mt-2 rounded-lg border border-ui-cyan/40 bg-ui-cyan/10 px-4 py-2 text-sm font-semibold text-ui-cyan transition hover:bg-ui-cyan/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
         >
           Back to Home
         </Link>
@@ -124,24 +124,24 @@ function EventHeader({ event }: { event: EventRow }) {
     <header className="mb-8">
       <Link
         href="/"
-        className="text-sm text-gray-400 transition hover:text-gray-600"
+        className="text-sm text-text-muted transition hover:text-ui-cyan"
       >
         &larr; Home
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-gray-900">{event.name}</h1>
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">{event.name}</h1>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-gray-100 px-3 py-1 font-mono text-sm tracking-widest text-gray-700">
+        <span className="rounded-md bg-canvas-elevated px-3 py-1 font-mono text-sm tracking-widest text-text-primary">
           {event.joinCode}
         </span>
         <button
           onClick={() => copy(event.joinCode, "code")}
-          className="rounded-md px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50"
+          className="rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
         >
           {copied === "code" ? "Copied!" : "Copy Code"}
         </button>
         <button
           onClick={() => copy(shareUrl, "link")}
-          className="rounded-md px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50"
+          className="rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
         >
           {copied === "link" ? "Copied!" : "Copy Link"}
         </button>
@@ -194,12 +194,15 @@ function AddSongForm({
     }
   }
 
+  const inputCls =
+    "rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-muted/50 focus-visible:border-ui-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/30";
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-8 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200"
+      className="mb-8 rounded-2xl border border-ui-cyan/15 bg-canvas-elevated/80 p-5"
     >
-      <h2 className="text-sm font-semibold text-gray-900">Add a Song</h2>
+      <h2 className="text-sm font-semibold text-text-primary">Add a Song</h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <input
           type="text"
@@ -208,7 +211,7 @@ function AddSongForm({
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className={inputCls}
         />
         <input
           type="text"
@@ -217,7 +220,7 @@ function AddSongForm({
           placeholder="Artist"
           value={artist}
           onChange={(e) => setArtist(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className={inputCls}
         />
       </div>
       <input
@@ -226,12 +229,12 @@ function AddSongForm({
         placeholder="Link (optional)"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        className={`mt-3 w-full ${inputCls}`}
       />
       <button
         type="submit"
         disabled={busy || !title.trim() || !artist.trim()}
-        className="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 sm:w-auto"
+        className="mt-4 w-full rounded-lg bg-gradient-to-r from-brand-gold-muted to-brand-gold px-4 py-2.5 text-sm font-bold text-canvas shadow-md shadow-brand-gold/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60 disabled:opacity-50 sm:w-auto"
       >
         {busy ? "Adding\u2026" : "Add to Queue"}
       </button>
@@ -253,7 +256,7 @@ function SongQueue({ songs, userId }: { songs: SongRow[]; userId: string }) {
 
   if (sorted.length === 0) {
     return (
-      <p className="text-center text-sm text-gray-400">
+      <p className="text-center text-sm text-text-muted">
         No songs yet &mdash; be the first to add one!
       </p>
     );
@@ -261,7 +264,7 @@ function SongQueue({ songs, userId }: { songs: SongRow[]; userId: string }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold text-gray-500">
+      <h2 className="mb-3 text-sm font-semibold text-text-muted">
         Queue &middot; {sorted.length} {sorted.length === 1 ? "song" : "songs"}
       </h2>
       <ul className="space-y-2">
@@ -283,7 +286,6 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
 
   function handleVote(newValue: 1 | -1) {
     if (userVote && userVote.value === newValue) {
-      // Toggle off
       db.transact(db.tx.votes[userVote.id].delete());
     } else {
       const lookupKey = `${song.id}:${userId}`;
@@ -297,16 +299,16 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
   }
 
   return (
-    <li className="flex items-center gap-4 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
+    <li className="flex items-center gap-4 rounded-xl border border-white/5 bg-canvas-elevated px-4 py-3">
       {/* Vote controls */}
       <div className="flex flex-col items-center gap-0.5">
         <button
           onClick={() => handleVote(1)}
           aria-label="Upvote"
-          className={`rounded p-1 text-lg leading-none transition ${
+          className={`rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60 ${
             userVote?.value === 1
-              ? "text-emerald-600"
-              : "text-gray-300 hover:text-emerald-500"
+              ? "text-action-red drop-shadow-[0_0_4px_rgba(255,68,68,0.5)]"
+              : "text-text-muted/40 hover:text-action-red/70"
           }`}
         >
           ▲
@@ -314,10 +316,10 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
         <span
           className={`min-w-[1.5rem] text-center text-sm font-bold ${
             score > 0
-              ? "text-emerald-700"
+              ? "text-action-red"
               : score < 0
-                ? "text-rose-600"
-                : "text-gray-500"
+                ? "text-text-muted/60"
+                : "text-text-muted/40"
           }`}
         >
           {score}
@@ -325,10 +327,10 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
         <button
           onClick={() => handleVote(-1)}
           aria-label="Downvote"
-          className={`rounded p-1 text-lg leading-none transition ${
+          className={`rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60 ${
             userVote?.value === -1
-              ? "text-rose-600"
-              : "text-gray-300 hover:text-rose-500"
+              ? "text-text-muted"
+              : "text-text-muted/40 hover:text-text-muted/70"
           }`}
         >
           ▼
@@ -337,10 +339,10 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
 
       {/* Song info */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-gray-900">
+        <p className="truncate text-sm font-semibold text-text-primary">
           {song.title}
         </p>
-        <p className="truncate text-sm text-gray-500">{song.artist}</p>
+        <p className="truncate text-sm text-text-muted">{song.artist}</p>
       </div>
 
       {/* Optional link */}
@@ -349,7 +351,7 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
           href={song.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 text-indigo-500 transition hover:text-indigo-700"
+          className="shrink-0 text-ui-cyan transition hover:text-ui-cyan-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
           aria-label="Open link"
         >
           <svg

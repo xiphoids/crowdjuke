@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "CrowdJuke",
-  description: "Your crowd, your playlist. A collaborative digital jukebox.",
+  description: "Vote the next hit — the crowd controls the music at weddings, concerts, and game day.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
+      <body className="min-h-full flex flex-col bg-canvas text-text-primary">
         <AuthGate>{children}</AuthGate>
       </body>
     </html>
