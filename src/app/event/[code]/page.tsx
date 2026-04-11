@@ -2,7 +2,9 @@ import EventRoom from "./EventRoom";
 
 export default async function EventPage(props: {
   params: Promise<{ code: string }>;
+  searchParams: Promise<{ share?: string }>;
 }) {
   const { code } = await props.params;
-  return <EventRoom code={code.toUpperCase()} />;
+  const { share } = await props.searchParams;
+  return <EventRoom code={code.toUpperCase()} initialShareUrl={share} />;
 }

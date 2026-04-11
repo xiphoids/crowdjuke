@@ -24,14 +24,14 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => document.getElementById("event-name")?.focus()}
-              className="rounded-full bg-landing-ink px-6 py-2.5 text-sm font-bold text-landing-bg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg"
+              className="rounded-full bg-gradient-to-r from-neon-orange to-brand-gold px-6 py-2.5 text-sm font-bold text-canvas shadow-md shadow-neon-orange/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-orange focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg"
             >
               Host Event
             </button>
             <button
               type="button"
               onClick={() => document.getElementById("join-code")?.focus()}
-              className="rounded-full border border-landing-border bg-landing-bg px-6 py-2.5 text-sm font-bold text-landing-ink transition hover:bg-landing-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg"
+              className="rounded-full border border-neon-orange/40 bg-landing-bg px-6 py-2.5 text-sm font-bold text-landing-ink transition hover:bg-neon-orange/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-orange focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg"
             >
               Join Event
             </button>
@@ -53,8 +53,22 @@ export default function HomePage() {
         />
       </section>
 
+      {/* Hero → dark transition */}
+      <div className="w-full bg-landing-bg" aria-hidden="true">
+        <svg
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          className="block h-[60px] w-full md:h-[80px]"
+        >
+          <path
+            d="M0,60 C360,120 1080,0 1440,60 L1440,120 L0,120 Z"
+            className="fill-canvas"
+          />
+        </svg>
+      </div>
+
       {/* How It Works */}
-      <section className="mt-24 w-full max-w-4xl px-4">
+      <section className="mt-10 w-full max-w-4xl px-4">
         <h2 className="mb-10 text-center text-2xl font-bold">
           How It <span className="text-ui-cyan">Works</span>
         </h2>
@@ -164,6 +178,7 @@ function CreateEventForm() {
   const router = useRouter();
   const user = db.useUser();
   const [name, setName] = useState("");
+  const [playlistUrl, setPlaylistUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -196,7 +211,11 @@ function CreateEventForm() {
           .link({ event: eventId }),
       ]);
 
-      router.push(`/event/${code}`);
+      const trimmedUrl = playlistUrl.trim();
+      const dest = trimmedUrl
+        ? `/event/${code}?share=${encodeURIComponent(trimmedUrl)}`
+        : `/event/${code}`;
+      router.push(dest);
     } catch {
       setError("Something went wrong. Please try again.");
       setBusy(false);
@@ -218,13 +237,25 @@ function CreateEventForm() {
         onChange={(e) => setName(e.target.value)}
         className="mt-1.5 rounded-lg border border-landing-border bg-landing-input-bg px-3 py-2 text-sm text-landing-ink shadow-sm placeholder:text-landing-muted/50 focus-visible:border-landing-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent/30"
       />
+      <label htmlFor="playlist-url" className="mt-3 text-sm font-medium text-landing-muted">
+        Playlist URL <span className="font-normal">(optional)</span>
+      </label>
+      <input
+        id="playlist-url"
+        type="url"
+        maxLength={500}
+        placeholder="Paste a Spotify, YouTube, or Apple Music playlist link"
+        value={playlistUrl}
+        onChange={(e) => setPlaylistUrl(e.target.value)}
+        className="mt-1.5 rounded-lg border border-landing-border bg-landing-input-bg px-3 py-2 text-sm text-landing-ink shadow-sm placeholder:text-landing-muted/50 focus-visible:border-landing-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent/30"
+      />
       <div className="mt-1.5 min-h-[1.25rem]">
         {error && <p className="text-sm text-action-red">{error}</p>}
       </div>
       <button
         type="submit"
         disabled={busy || !name.trim()}
-        className="mt-1 rounded-lg bg-landing-ink px-4 py-2.5 text-sm font-bold text-landing-bg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg disabled:opacity-50"
+        className="mt-1 rounded-lg bg-gradient-to-r from-neon-orange to-brand-gold px-4 py-2.5 text-sm font-bold text-canvas shadow-md shadow-neon-orange/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-orange focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg disabled:opacity-50"
       >
         {busy ? "Creating\u2026" : "Create Event"}
       </button>
@@ -269,7 +300,7 @@ function JoinEventForm() {
       <button
         type="submit"
         disabled={!code.trim()}
-        className="mt-1 rounded-lg border border-landing-border bg-landing-bg px-4 py-2.5 text-sm font-bold text-landing-ink transition hover:bg-landing-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-accent focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg disabled:opacity-50"
+        className="mt-1 rounded-lg border border-neon-orange/30 bg-landing-bg px-4 py-2.5 text-sm font-bold text-landing-ink transition hover:bg-neon-orange/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-orange focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg disabled:opacity-50"
       >
         Join
       </button>

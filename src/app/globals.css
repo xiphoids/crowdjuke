@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #002b2b;
-  --foreground: #e8e8e8;
+  --background: #1b0e1f;
+  --foreground: #f0eaf5;
 }
 
 @theme inline {
@@ -11,32 +11,36 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Canvas */
-  --color-canvas: #002b2b;
-  --color-canvas-elevated: #003d3d;
+  /* Canvas (warm midnight purple) */
+  --color-canvas: #1b0e1f;
+  --color-canvas-elevated: #2a1a33;
 
-  /* Brand gold */
-  --color-brand-gold: #FFD700;
-  --color-brand-gold-muted: #b89b00;
+  /* Brand gold (jukebox amber) */
+  --color-brand-gold: #FFBA08;
+  --color-brand-gold-muted: #c99200;
+
+  /* Neon accents (jukebox-inspired) */
+  --color-neon-orange: #FF6B18;
+  --color-neon-magenta: #FF3388;
 
   /* UI cyan */
   --color-ui-cyan: #00E5FF;
-  --color-ui-cyan-muted: #009fbf;
+  --color-ui-cyan-muted: #00a8bf;
 
   /* Action red (vote / primary crowd choice) */
-  --color-action-red: #E63333;
-  --color-action-red-hover: #cc2020;
+  --color-action-red: #FF2D55;
+  --color-action-red-hover: #e0193f;
 
   /* Text */
-  --color-text-primary: #e8e8e8;
-  --color-text-muted: #8eadad;
+  --color-text-primary: #f0eaf5;
+  --color-text-muted: #9a8bad;
 
   /* Landing hero (cream palette) */
   --color-landing-bg: #F5F0E1;
   --color-landing-ink: #1A1D23;
   --color-landing-muted: #5C5A52;
   --color-landing-border: #D6D1C0;
-  --color-landing-accent: #B89B00;
+  --color-landing-accent: #FF6B18;
   --color-landing-input-bg: #FFFDF7;
 }
 
@@ -48,7 +52,7 @@ body {
 
 @keyframes glow-breathe {
   0%, 100% { filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4)); }
-  50% { filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.5)); }
+  50% { filter: drop-shadow(0 0 22px rgba(255, 186, 8, 0.5)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
