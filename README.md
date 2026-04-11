@@ -34,3 +34,4 @@ A collaborative digital jukebox. Hosts create events and share a short code with
 
 Open [http://localhost:3000](http://localhost:3000) — create an event, share the code, and start adding songs.
 # crowdjuke
+# crowdjuke
