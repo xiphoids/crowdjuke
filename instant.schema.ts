@@ -1,50 +1,118 @@
+// Docs: https://www.instantdb.com/docs/modeling-data
+
 import { i } from "@instantdb/react";
 
 const _schema = i.schema({
   entities: {
+    $files: i.entity({
+      path: i.string().unique().indexed(),
+      url: i.string(),
+    }),
+    $streams: i.entity({
+      abortReason: i.string().optional(),
+      clientId: i.string().unique().indexed(),
+      done: i.boolean().optional(),
+      size: i.number().optional(),
+    }),
     $users: i.entity({
-      email: i.string().optional().unique().indexed(),
+      email: i.string().unique().indexed().optional(),
+      imageURL: i.string().optional(),
+      type: i.string().optional(),
     }),
     events: i.entity({
-      name: i.string(),
-      joinCode: i.string().unique().indexed(),
+      createdAt: i.number(),
       creatorId: i.string(),
-      createdAt: i.number(),
-    }),
-    songRequests: i.entity({
-      title: i.string(),
-      artist: i.string(),
-      url: i.string().optional(),
-      submittedBy: i.string(),
-      createdAt: i.number(),
-    }),
-    votes: i.entity({
-      value: i.number(),
-      voterId: i.string(),
-      lookupKey: i.string().unique().indexed(),
+      joinCode: i.string().unique().indexed(),
+      name: i.string(),
     }),
     memberships: i.entity({
-      userId: i.string(),
-      lookupKey: i.string().unique().indexed(),
       createdAt: i.number(),
+      lookupKey: i.string().unique().indexed(),
+      userId: i.string(),
+    }),
+    songRequests: i.entity({
+      artist: i.string(),
+      createdAt: i.number(),
+      durationMs: i.number().optional(),
+      imageUrl: i.string().optional(),
+      submittedBy: i.string(),
+      title: i.string(),
+      url: i.string().optional(),
+    }),
+    votes: i.entity({
+      lookupKey: i.string().unique().indexed(),
+      value: i.number(),
+      voterId: i.string(),
     }),
   },
   links: {
-    eventRequests: {
-      forward: { on: "songRequests", has: "one", label: "event" },
-      reverse: { on: "events", has: "many", label: "songRequests" },
+    $streams$files: {
+      forward: {
+        on: "$streams",
+        has: "many",
+        label: "$files",
+      },
+      reverse: {
+        on: "$files",
+        has: "one",
+        label: "$stream",
+        onDelete: "cascade",
+      },
     },
-    requestVotes: {
-      forward: { on: "votes", has: "one", label: "songRequest" },
-      reverse: { on: "songRequests", has: "many", label: "votes" },
+    $usersLinkedPrimaryUser: {
+      forward: {
+        on: "$users",
+        has: "one",
+        label: "linkedPrimaryUser",
+        onDelete: "cascade",
+      },
+      reverse: {
+        on: "$users",
+        has: "many",
+        label: "linkedGuestUsers",
+      },
     },
-    eventMemberships: {
-      forward: { on: "memberships", has: "one", label: "event" },
-      reverse: { on: "events", has: "many", label: "memberships" },
+    membershipsEvent: {
+      forward: {
+        on: "memberships",
+        has: "one",
+        label: "event",
+      },
+      reverse: {
+        on: "events",
+        has: "many",
+        label: "memberships",
+      },
+    },
+    songRequestsEvent: {
+      forward: {
+        on: "songRequests",
+        has: "one",
+        label: "event",
+      },
+      reverse: {
+        on: "events",
+        has: "many",
+        label: "songRequests",
+      },
+    },
+    votesSongRequest: {
+      forward: {
+        on: "votes",
+        has: "one",
+        label: "songRequest",
+      },
+      reverse: {
+        on: "songRequests",
+        has: "many",
+        label: "votes",
+      },
     },
   },
+  rooms: {},
 });
 
+// This helps TypeScript display nicer intellisense
 type _AppSchema = typeof _schema;
 interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
