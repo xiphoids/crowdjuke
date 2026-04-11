@@ -317,14 +317,18 @@ function AddSongForm({
     );
   }
 
-  function upvoteExisting(song: SongRow) {
+  async function upvoteExisting(song: SongRow) {
     const lookupKey = `${song.id}:${userId}`;
-    db.transact(
-      db.tx.votes
-        .lookup("lookupKey", lookupKey)
-        .update({ value: 1, voterId: userId, lookupKey })
-        .link({ songRequest: song.id }),
-    );
+    try {
+      await db.transact(
+        db.tx.votes
+          .lookup("lookupKey", lookupKey)
+          .update({ value: 1, voterId: userId, lookupKey })
+          .link({ songRequest: song.id }),
+      );
+    } catch {
+      showToast("Couldn\u2019t record your vote \u2014 please try again.");
+    }
   }
 
   // Suggestion state
@@ -459,7 +463,12 @@ function AddSongForm({
             })
             .link({ event: eventId });
         });
-        await db.transact(txns);
+        try {
+          await db.transact(txns);
+        } catch {
+          showToast("Couldn\u2019t add songs \u2014 please try again.");
+          return;
+        }
       }
 
       if (mergedCount > 0 && newTracks.length > 0) {
@@ -495,19 +504,24 @@ function AddSongForm({
         showToast("Already in the queue — your vote has been counted!");
       } else {
         const reqId = id();
-        await db.transact(
-          db.tx.songRequests[reqId]
-            .update({
-              title: t,
-              artist: a,
-              ...(manualUrl.trim() ? { url: manualUrl.trim() } : {}),
-              ...(manualImageUrl.trim() ? { imageUrl: manualImageUrl.trim() } : {}),
-              ...(manualDurationMs != null ? { durationMs: manualDurationMs } : {}),
-              submittedBy: userId,
-              createdAt: Date.now(),
-            })
-            .link({ event: eventId }),
-        );
+        try {
+          await db.transact(
+            db.tx.songRequests[reqId]
+              .update({
+                title: t,
+                artist: a,
+                ...(manualUrl.trim() ? { url: manualUrl.trim() } : {}),
+                ...(manualImageUrl.trim() ? { imageUrl: manualImageUrl.trim() } : {}),
+                ...(manualDurationMs != null ? { durationMs: manualDurationMs } : {}),
+                submittedBy: userId,
+                createdAt: Date.now(),
+              })
+              .link({ event: eventId }),
+          );
+        } catch {
+          showToast("Couldn\u2019t add song \u2014 please try again.");
+          return;
+        }
       }
       setTitle("");
       setArtist("");
@@ -879,23 +893,31 @@ function SongCard({ song, userId, isHost, creatorId }: { song: SongRow; userId: 
   const isDjPick = song.submittedBy === creatorId;
   const isCjPick = score >= CJ_PICK_THRESHOLD;
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!confirm(`Remove "${song.title}" from the queue?`)) return;
-    db.transact([
-      ...song.votes.map((v) => db.tx.votes[v.id].delete()),
-      db.tx.songRequests[song.id].delete(),
-    ]);
+    try {
+      await db.transact([
+        ...song.votes.map((v) => db.tx.votes[v.id].delete()),
+        db.tx.songRequests[song.id].delete(),
+      ]);
+    } catch {
+      // Best-effort; deletion failures are rare and non-critical.
+    }
   }
 
-  function handleVote(newValue: 1 | -1) {
+  async function handleVote(newValue: 1 | -1) {
     if (userVote?.value === newValue) return;
     const lookupKey = `${song.id}:${userId}`;
-    db.transact(
-      db.tx.votes
-        .lookup("lookupKey", lookupKey)
-        .update({ value: newValue, voterId: userId })
-        .link({ songRequest: song.id }),
-    );
+    try {
+      await db.transact(
+        db.tx.votes
+          .lookup("lookupKey", lookupKey)
+          .update({ value: newValue, voterId: userId })
+          .link({ songRequest: song.id }),
+      );
+    } catch {
+      // Silently ignore vote failures; the UI stays consistent via optimistic updates.
+    }
   }
 
   return (
