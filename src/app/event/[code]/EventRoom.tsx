@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import QRCode from "react-qr-code";
 import { id } from "@instantdb/react";
 import db from "@/lib/db";
 
@@ -105,8 +106,20 @@ export default function EventRoom({ code }: { code: string }) {
 // Header with share controls
 // ---------------------------------------------------------------------------
 
+function useShareUrl(joinCode: string) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    setUrl(`${base}/event/${joinCode}`);
+  }, [joinCode]);
+  return url;
+}
+
 function EventHeader({ event }: { event: EventRow }) {
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
+  const [showQr, setShowQr] = useState(false);
+  const shareUrl = useShareUrl(event.joinCode);
 
   function copy(text: string, kind: "code" | "link") {
     navigator.clipboard.writeText(text).then(() => {
@@ -115,10 +128,8 @@ function EventHeader({ event }: { event: EventRow }) {
     });
   }
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/event/${event.joinCode}`
-      : "";
+  const btnCls =
+    "rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60";
 
   return (
     <header className="mb-8">
@@ -133,19 +144,22 @@ function EventHeader({ event }: { event: EventRow }) {
         <span className="rounded-md bg-canvas-elevated px-3 py-1 font-mono text-sm tracking-widest text-text-primary">
           {event.joinCode}
         </span>
-        <button
-          onClick={() => copy(event.joinCode, "code")}
-          className="rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
-        >
+        <button onClick={() => copy(event.joinCode, "code")} className={btnCls}>
           {copied === "code" ? "Copied!" : "Copy Code"}
         </button>
-        <button
-          onClick={() => copy(shareUrl, "link")}
-          className="rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60"
-        >
+        <button onClick={() => copy(shareUrl, "link")} className={btnCls}>
           {copied === "link" ? "Copied!" : "Copy Link"}
         </button>
+        <button onClick={() => setShowQr((v) => !v)} className={btnCls}>
+          {showQr ? "Hide QR" : "Show QR"}
+        </button>
       </div>
+
+      {showQr && shareUrl && (
+        <div className="mt-4 inline-block rounded-xl bg-white p-3">
+          <QRCode value={shareUrl} size={160} />
+        </div>
+      )}
     </header>
   );
 }
@@ -307,7 +321,7 @@ function SongCard({ song, userId }: { song: SongRow; userId: string }) {
           aria-label="Upvote"
           className={`rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60 ${
             userVote?.value === 1
-              ? "text-action-red drop-shadow-[0_0_4px_rgba(255,68,68,0.5)]"
+              ? "text-action-red drop-shadow-[0_0_4px_rgba(255,45,85,0.5)]"
               : "text-text-muted/40 hover:text-action-red/70"
           }`}
         >
