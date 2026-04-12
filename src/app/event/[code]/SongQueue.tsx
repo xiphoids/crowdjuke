@@ -173,10 +173,10 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
         <img
           src={song.imageUrl}
           alt=""
-          className={`${artSize} shrink-0 rounded-md object-cover`}
+          className={cn(artSize, "shrink-0 rounded-md object-cover")}
         />
       ) : (
-        <div className={`flex ${artSize} shrink-0 items-center justify-center rounded-md bg-white/5 text-text-muted/30`}>
+        <div className={cn("flex shrink-0 items-center justify-center rounded-md bg-white/5 text-text-muted/30", artSize)}>
           <MusicNoteIcon className="h-5 w-5" />
         </div>
       )}
