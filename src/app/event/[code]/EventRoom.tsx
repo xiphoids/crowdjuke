@@ -378,6 +378,14 @@ function AddSongForm({
     clearSuggestions();
   }
 
+  function clearSelection() {
+    setSelectedTrack(null);
+    setInput("");
+    setManualUrl("");
+    setManualImageUrl("");
+    setManualDurationMs(undefined);
+  }
+
   function handleSuggestionKeyDown(e: React.KeyboardEvent) {
     if (!showSuggestions || suggestions.length === 0) return;
     if (e.key === "ArrowDown") {
