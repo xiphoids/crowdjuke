@@ -8,6 +8,7 @@ import { useTrackSearch } from "./useTrackSearch";
 import { formatDuration } from "./format-duration";
 import { MusicNoteIcon } from "@/components/MusicNoteIcon";
 import { cn } from "@/lib/cn";
+import { useDropdownPosition } from "@/lib/use-dropdown-position";
 
 const normalize = (s: string) => s.toLowerCase().trim();
 
@@ -85,6 +86,11 @@ export default function AddSongForm({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const formWrapperRef = useRef<HTMLDivElement>(null);
+
+  const dropdownOpen = !isUrl && showSuggestions && (
+    suggestions.length > 0 || (suggestionsLoading && searchQuery.length >= 2)
+  );
+  const dropdownStyle = useDropdownPosition(formWrapperRef, dropdownOpen);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -258,6 +264,7 @@ export default function AddSongForm({
 
       setInput("");
       setResolved(null);
+      inputRef.current?.blur();
     } finally {
       setBusy(false);
     }
@@ -309,6 +316,7 @@ export default function AddSongForm({
       setManualDurationMs(undefined);
       setShowSuggestions(false);
       clearSuggestions();
+      inputRef.current?.blur();
     } finally {
       setBusy(false);
     }
@@ -390,12 +398,13 @@ export default function AddSongForm({
           </div>
 
           {/* Search suggestions dropdown (non-URL mode) */}
-          {!isUrl && showSuggestions && suggestions.length > 0 && (
+          {!isUrl && showSuggestions && suggestions.length > 0 && dropdownStyle && (
             <ul
               id="track-suggestions"
               ref={suggestionsRef}
               role="listbox"
-              className="absolute left-0 right-0 z-10 mt-1 max-h-56 overflow-y-auto rounded-lg border border-white/10 bg-canvas-elevated shadow-lg"
+              style={dropdownStyle}
+              className="overflow-y-auto rounded-lg border border-white/10 bg-canvas-elevated shadow-lg"
             >
               {suggestions.map((track, i) => (
                 <li
@@ -442,8 +451,8 @@ export default function AddSongForm({
             </ul>
           )}
 
-          {!isUrl && showSuggestions && suggestionsLoading && searchQuery.length >= 2 && suggestions.length === 0 && (
-            <div className="absolute left-0 right-0 z-10 mt-1 rounded-lg border border-white/10 bg-canvas-elevated px-3 py-2 text-xs text-text-muted shadow-lg">
+          {!isUrl && showSuggestions && suggestionsLoading && searchQuery.length >= 2 && suggestions.length === 0 && dropdownStyle && (
+            <div style={dropdownStyle} className="rounded-lg border border-white/10 bg-canvas-elevated px-3 py-2 text-xs text-text-muted shadow-lg">
               Searching&hellip;
             </div>
           )}
