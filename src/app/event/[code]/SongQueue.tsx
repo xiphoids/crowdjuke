@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import db from "@/lib/db";
 import type { SongRow } from "./types";
 import { CJ_PICK_THRESHOLD } from "./types";
@@ -8,8 +8,9 @@ import { formatDuration } from "./format-duration";
 import { MusicNoteIcon } from "@/components/MusicNoteIcon";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { cn } from "@/lib/cn";
+import { useShareUrl } from "./useShareUrl";
 
-export default function SongQueue({ songs, userId, isHost, creatorId }: { songs: SongRow[]; userId: string; isHost: boolean; creatorId: string }) {
+export default function SongQueue({ songs, userId, isHost, creatorId, highlightIds, clearHighlight, joinCode }: { songs: SongRow[]; userId: string; isHost: boolean; creatorId: string; highlightIds: Set<string>; clearHighlight: (id: string) => void; joinCode: string }) {
   const sorted = [...songs].sort((a, b) => {
     const dedupA = new Map<string, number>();
     for (const v of a.votes) dedupA.set(v.voterId, v.value);
@@ -23,10 +24,7 @@ export default function SongQueue({ songs, userId, isHost, creatorId }: { songs:
 
   if (sorted.length === 0) {
     return isHost ? (
-      <div className="text-center text-sm text-text-muted space-y-1">
-        <p>Dead air? Not on your watch.</p>
-        <p>Share the code and let the people pick the hits &mdash; or drop a banger yourself up top.</p>
-      </div>
+      <HostEmptyState joinCode={joinCode} />
     ) : (
       <p className="text-center text-sm text-text-muted">
         No tracks on the ballot yet. Be the one who gets the party started &mdash; search above!
@@ -41,24 +39,30 @@ export default function SongQueue({ songs, userId, isHost, creatorId }: { songs:
       </h2>
       <ul className="space-y-2">
         {sorted.map((song, i) => (
-          <SongCard key={song.id} song={song} userId={userId} isHost={isHost} creatorId={creatorId} position={i + 1} />
+          <SongCard key={song.id} song={song} userId={userId} isHost={isHost} creatorId={creatorId} position={i + 1} isHighlighted={highlightIds.has(song.id)} clearHighlight={clearHighlight} />
         ))}
       </ul>
     </section>
   );
 }
 
-function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow; userId: string; isHost: boolean; creatorId: string; position: number }) {
+function SongCard({ song, userId, isHost, creatorId, position, isHighlighted, clearHighlight }: { song: SongRow; userId: string; isHost: boolean; creatorId: string; position: number; isHighlighted: boolean; clearHighlight: (id: string) => void }) {
+  const [pendingVote, setPendingVote] = useState<1 | -1 | null>(null);
+
+  const userVote = song.votes.find((v) => v.voterId === userId);
+
   const dedupedVotes = new Map<string, number>();
   for (const v of song.votes) {
     dedupedVotes.set(v.voterId, v.value);
   }
+  if (pendingVote !== null) dedupedVotes.set(userId, pendingVote);
+
   const score = Array.from(dedupedVotes.values()).reduce((s, v) => s + v, 0);
-  const userVote = song.votes.find((v) => v.voterId === userId);
+  const effectiveUserValue = pendingVote ?? (userVote?.value ?? 0);
   const isOwnSong = song.submittedBy === userId;
   const hasOtherVotes = song.votes.some((v) => v.voterId !== userId && v.value !== 0);
   const canDelete = isHost || (isOwnSong && !hasOtherVotes);
-  const hasVoted = (userVote?.value ?? 0) !== 0;
+  const hasVoted = effectiveUserValue !== 0;
   const canVote = !isOwnSong && !hasVoted;
   const isDjPick = song.submittedBy === creatorId;
   const isCjPick = score >= CJ_PICK_THRESHOLD;
@@ -73,6 +77,13 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
         : position === 3
           ? "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold bg-neon-orange/25 text-neon-orange"
           : "";
+
+  const cardRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (!isHighlighted || !cardRef.current) return;
+    cardRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [isHighlighted]);
 
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -90,8 +101,8 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
   }
 
   async function handleVote(newValue: 1 | -1) {
-    const currentValue = userVote?.value ?? 0;
-    if (currentValue !== 0) return;
+    if ((userVote?.value ?? 0) !== 0 || pendingVote !== null) return;
+    setPendingVote(newValue);
     const lookupKey = `${song.id}:${userId}`;
     try {
       await db.transact(
@@ -100,11 +111,25 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
           .update({ value: newValue, voterId: userId })
           .link({ songRequest: song.id }),
       );
-    } catch {}
+    } catch {
+      setPendingVote(null);
+    }
   }
 
+  useEffect(() => {
+    if (pendingVote !== null && userVote?.value === pendingVote) {
+      setPendingVote(null);
+    }
+  }, [userVote?.value, pendingVote]);
+
   return (
-    <li className={cn("flex flex-wrap items-center gap-2 rounded-xl border border-white/5 bg-canvas-elevated px-4 py-3 sm:flex-nowrap sm:gap-4", position === 1 && "border-l-2 border-l-brand-gold/40")}>
+    <li
+      ref={cardRef}
+      className={cn("flex flex-wrap items-center gap-2 rounded-xl border border-white/5 bg-canvas-elevated px-4 py-3 sm:flex-nowrap sm:gap-4", position === 1 && "border-l-2 border-l-brand-gold/40", isHighlighted && "animate-song-highlight")}
+      onAnimationEnd={(e) => {
+        if (e.animationName === "song-highlight") clearHighlight(song.id);
+      }}
+    >
       {isTop3 ? (
         <span className={cn("shrink-0", rankBadgeCls)}>{position}</span>
       ) : (
@@ -121,7 +146,7 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
           aria-label="Upvote"
           className={cn(
             "rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60 disabled:cursor-default disabled:opacity-50",
-            userVote?.value === 1
+            effectiveUserValue === 1
               ? "text-brand-gold drop-shadow-[0_0_4px_rgba(255,186,8,0.5)]"
               : "text-text-muted/40 hover:text-brand-gold/70",
           )}
@@ -142,21 +167,22 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
         >
           {score}
         </span>
-        <button
-          onClick={() => canVote && handleVote(-1)}
-          aria-disabled={!canVote}
-          aria-label="Downvote"
-          className={cn(
-            "group relative rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60",
-            !canVote && "cursor-default opacity-50",
-            userVote?.value === -1
-              ? "text-ui-cyan-muted"
-              : "text-text-muted/40 hover:text-text-muted/70",
-          )}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
-            <path fillRule="evenodd" d="M10.53 13.53a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 1 1 1.06-1.06L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25Z" clipRule="evenodd" />
-          </svg>
+        <div className="group relative">
+          <button
+            onClick={() => handleVote(-1)}
+            disabled={!canVote}
+            aria-label="Downvote"
+            className={cn(
+              "rounded p-1 text-lg leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60 disabled:cursor-default disabled:opacity-50",
+              effectiveUserValue === -1
+                ? "text-ui-cyan-muted"
+                : "text-text-muted/40 hover:text-text-muted/70",
+            )}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
+              <path fillRule="evenodd" d="M10.53 13.53a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 1 1 1.06-1.06L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25Z" clipRule="evenodd" />
+            </svg>
+          </button>
           {isOwnSong && (
             <>
               <span className="sr-only">You submitted this song</span>
@@ -165,7 +191,7 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
               </span>
             </>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Album art */}
@@ -287,5 +313,45 @@ function SongCard({ song, userId, isHost, creatorId, position }: { song: SongRow
         onCancel={() => setShowConfirm(false)}
       />
     </li>
+  );
+}
+
+function HostEmptyState({ joinCode }: { joinCode: string }) {
+  const shareUrl = useShareUrl(joinCode);
+  const [copied, setCopied] = useState(false);
+
+  const share = useCallback(async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Join my CrowdJuke", url: shareUrl });
+        return;
+      } catch {
+        // User cancelled or API unavailable — fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  }, [shareUrl]);
+
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/5 bg-canvas-elevated/60 px-6 py-8 text-center">
+      <p className="text-sm text-text-muted">Dead air? Not on your watch.</p>
+      <span className="rounded-md bg-canvas px-3 py-1 font-mono text-sm tracking-widest text-text-primary">
+        {joinCode}
+      </span>
+      <button
+        type="button"
+        onClick={share}
+        className="rounded-lg bg-gradient-to-r from-brand-gold-muted to-brand-gold px-5 py-2.5 text-sm font-bold text-canvas shadow-md shadow-brand-gold/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60"
+      >
+        {copied ? "Link Copied!" : "Share Your Code"}
+      </button>
+      <p className="text-xs text-text-muted/70">
+        Or drop a banger yourself up top.
+      </p>
+    </div>
   );
 }

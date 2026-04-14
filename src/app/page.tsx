@@ -6,6 +6,7 @@ import Image from "next/image";
 import { id } from "@instantdb/react";
 import db from "@/lib/db";
 import { generateJoinCode, normalizeCode } from "@/lib/joinCode";
+import { cn } from "@/lib/cn";
 
 export default function HomePage() {
   return (
@@ -147,7 +148,7 @@ function EventTypeCard({
   rows: { song: string; artist: string; pct: number }[];
 }) {
   return (
-    <div className={`rounded-2xl border ${accent} bg-canvas-elevated/80 p-6`}>
+    <div className={cn("rounded-2xl border bg-canvas-elevated/80 p-6", accent)}>
       <h3 className="text-xl font-semibold">
         {emoji} {title}
       </h3>
