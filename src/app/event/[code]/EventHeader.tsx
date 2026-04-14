@@ -7,7 +7,7 @@ import type { EventRow } from "./types";
 import { shareOrCopy } from "./shareOrCopy";
 import { useShareUrl } from "./useShareUrl";
 
-export default function EventHeader({ event }: { event: EventRow }) {
+export default function EventHeader({ event, memberCount }: { event: EventRow; memberCount: number }) {
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const [showQr, setShowQr] = useState(false);
   const shareUrl = useShareUrl(event.joinCode);
@@ -40,7 +40,12 @@ export default function EventHeader({ event }: { event: EventRow }) {
       >
         &larr; Home
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-text-primary">{event.name}</h1>
+      <div className="mt-2 flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-text-primary">{event.name}</h1>
+        <span className="rounded-md bg-canvas-elevated px-2 py-0.5 text-xs font-medium text-text-muted">
+          {memberCount} {memberCount === 1 ? "here" : "here"}
+        </span>
+      </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="rounded-md bg-canvas-elevated px-3 py-1 font-mono text-sm tracking-widest text-text-primary">
           {event.joinCode}

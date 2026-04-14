@@ -49,7 +49,7 @@ export default function EventRoom({
     events: {
       $: { where: { joinCode: code } },
       songRequests: { votes: {} },
-      memberships: { $: { where: { userId: user.id } } },
+      memberships: {},
     },
   });
 
@@ -59,7 +59,7 @@ export default function EventRoom({
   const joined = useRef(false);
   useEffect(() => {
     if (!event || joined.current) return;
-    if (event.memberships.length > 0) return;
+    if (event.memberships.some((m) => m.userId === user.id)) return;
     joined.current = true;
 
     db.transact(
@@ -115,7 +115,7 @@ export default function EventRoom({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4">
       <div className="pt-4 sm:pt-8">
-        <EventHeader event={event} />
+        <EventHeader event={event} memberCount={event.memberships.length} />
       </div>
       <div className="sticky top-0 z-20 -mx-4 bg-canvas px-4 pb-4 pt-4 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.35)]">
         <AddSongForm
