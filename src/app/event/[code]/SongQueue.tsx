@@ -8,6 +8,7 @@ import { formatDuration } from "./format-duration";
 import { MusicNoteIcon } from "@/components/MusicNoteIcon";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { cn } from "@/lib/cn";
+import { shareOrCopy } from "./shareOrCopy";
 import { useShareUrl } from "./useShareUrl";
 
 export default function SongQueue({ songs, userId, isHost, creatorId, highlightIds, clearHighlight, joinCode }: { songs: SongRow[]; userId: string; isHost: boolean; creatorId: string; highlightIds: Set<string>; clearHighlight: (id: string) => void; joinCode: string }) {
@@ -321,19 +322,14 @@ function HostEmptyState({ joinCode }: { joinCode: string }) {
   const [copied, setCopied] = useState(false);
 
   const share = useCallback(async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Join my CrowdJuke", url: shareUrl });
-        return;
-      } catch {
-        // User cancelled or API unavailable — fall through to clipboard
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const result = await shareOrCopy(
+      { title: "Join my CrowdJuke", url: shareUrl },
+      shareUrl,
+    );
+    if (result === "copied") {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    }
   }, [shareUrl]);
 
   return (

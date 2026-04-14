@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import QRCode from "react-qr-code";
 import type { EventRow } from "./types";
+import { shareOrCopy } from "./shareOrCopy";
 import { useShareUrl } from "./useShareUrl";
 
 export default function EventHeader({ event }: { event: EventRow }) {
@@ -11,12 +12,22 @@ export default function EventHeader({ event }: { event: EventRow }) {
   const [showQr, setShowQr] = useState(false);
   const shareUrl = useShareUrl(event.joinCode);
 
-  function copy(text: string, kind: "code" | "link") {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(kind);
-      setTimeout(() => setCopied(null), 2000);
-    });
-  }
+  const share = useCallback(
+    async (kind: "code" | "link") => {
+      const payload =
+        kind === "link"
+          ? { title: "Join my CrowdJuke", url: shareUrl }
+          : { title: "Join my CrowdJuke", text: event.joinCode };
+      const clipText = kind === "link" ? shareUrl : event.joinCode;
+
+      const result = await shareOrCopy(payload, clipText);
+      if (result === "copied") {
+        setCopied(kind);
+        setTimeout(() => setCopied(null), 2000);
+      }
+    },
+    [shareUrl, event.joinCode],
+  );
 
   const btnCls =
     "rounded-md px-2.5 py-1 text-xs font-medium text-ui-cyan ring-1 ring-ui-cyan/30 transition hover:bg-ui-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-cyan/60";
@@ -34,10 +45,10 @@ export default function EventHeader({ event }: { event: EventRow }) {
         <span className="rounded-md bg-canvas-elevated px-3 py-1 font-mono text-sm tracking-widest text-text-primary">
           {event.joinCode}
         </span>
-        <button onClick={() => copy(event.joinCode, "code")} className={btnCls}>
+        <button onClick={() => share("code")} className={btnCls}>
           {copied === "code" ? "Copied!" : "Copy Code"}
         </button>
-        <button onClick={() => copy(shareUrl, "link")} className={btnCls}>
+        <button onClick={() => share("link")} className={btnCls}>
           {copied === "link" ? "Copied!" : "Copy Link"}
         </button>
         <button onClick={() => setShowQr((v) => !v)} className={btnCls}>
