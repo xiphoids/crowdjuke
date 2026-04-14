@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import db from "@/lib/db";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading, user, error } = db.useAuth();
@@ -15,7 +16,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-canvas">
-        <p className="animate-pulse text-text-muted text-lg">Loading&hellip;</p>
+        <LoadingSpinner />
       </div>
     );
   }

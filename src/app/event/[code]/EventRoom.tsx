@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import db from "@/lib/db";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import type { EventRow } from "./types";
 import EventHeader from "./EventHeader";
 import AddSongForm from "./AddSongForm";
@@ -87,9 +88,7 @@ export default function EventRoom({
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="animate-pulse text-text-muted text-lg">
-          Loading event&hellip;
-        </p>
+        <LoadingSpinner label="Loading event…" />
       </div>
     );
   }

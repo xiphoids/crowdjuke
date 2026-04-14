@@ -45,6 +45,7 @@
 
   --animate-fade-in: fade-in 0.25s ease-out;
   --animate-song-highlight: song-highlight 1.5s ease-out;
+  --animate-glow-breathe: glow-breathe 2s ease-in-out infinite;
 }
 
 body {
