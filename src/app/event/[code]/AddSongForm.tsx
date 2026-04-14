@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { id } from "@instantdb/react";
 import db from "@/lib/db";
 import type { ResolvedTrack, ResolveResult, SearchTrack, SongRow } from "./types";
@@ -86,6 +86,7 @@ export default function AddSongForm({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const formWrapperRef = useRef<HTMLDivElement>(null);
+  const addSongInputId = useId();
 
   const dropdownOpen = !isUrl && showSuggestions && (
     suggestions.length > 0 || (suggestionsLoading && searchQuery.length >= 2)
@@ -360,9 +361,11 @@ export default function AddSongForm({
     <div className="rounded-2xl border border-ui-cyan/15 bg-canvas-elevated/80 p-5">
       <form onSubmit={isUrl ? (e) => { e.preventDefault(); resolveUrl(input); } : handleManualSubmit} className="mt-3">
         <div ref={formWrapperRef} className="relative">
+          <label htmlFor={addSongInputId} className="sr-only">Song name, artist, or link</label>
           <div className="flex gap-2" onKeyDown={!isUrl ? handleSuggestionKeyDown : undefined}>
             <input
               ref={inputRef}
+              id={addSongInputId}
               type="text"
               maxLength={500}
               placeholder="Song name, artist, or link"
