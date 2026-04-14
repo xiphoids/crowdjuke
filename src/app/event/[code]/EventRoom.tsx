@@ -48,6 +48,7 @@ export default function EventRoom({
   const { isLoading, error, data } = db.useQuery({
     events: {
       $: { where: { joinCode: code } },
+      nowPlaying: { votes: {} },
       songRequests: { votes: {} },
       memberships: {},
     },
@@ -129,7 +130,7 @@ export default function EventRoom({
         />
       </div>
       <div className="pb-8 pt-4">
-        <SongQueue songs={event.songRequests} userId={user.id} isHost={user.id === event.creatorId} creatorId={event.creatorId} highlightIds={highlightIds} clearHighlight={clearHighlight} joinCode={event.joinCode} />
+        <SongQueue songs={event.songRequests} nowPlaying={event.nowPlaying} eventId={event.id} userId={user.id} isHost={user.id === event.creatorId} creatorId={event.creatorId} highlightIds={highlightIds} clearHighlight={clearHighlight} joinCode={event.joinCode} />
       </div>
 
       <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">

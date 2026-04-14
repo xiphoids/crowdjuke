@@ -29,6 +29,7 @@ const rules = {
       link: {
         songRequests: "auth.id != null",
         memberships: "auth.id != null",
+        nowPlaying: "auth.id != null && auth.id == data.creatorId",
       },
     },
   },
@@ -49,7 +50,8 @@ const rules = {
       create: "auth.id != null && auth.id == data.submittedBy",
       delete:
         "auth.id != null && (auth.id == data.submittedBy || auth.id in data.ref('event.creatorId'))",
-      update: "auth.id != null && auth.id == data.submittedBy",
+      update:
+        "auth.id != null && (auth.id == data.submittedBy || auth.id in data.ref('event.creatorId'))",
       link: {
         // Link-time context does not always include `submittedBy`, so only require auth.
         event: "auth.id != null",

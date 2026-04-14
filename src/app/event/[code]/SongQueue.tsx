@@ -11,19 +11,21 @@ import { cn } from "@/lib/cn";
 import { shareOrCopy } from "./shareOrCopy";
 import { useShareUrl } from "./useShareUrl";
 
-export default function SongQueue({ songs, userId, isHost, creatorId, highlightIds, clearHighlight, joinCode }: { songs: SongRow[]; userId: string; isHost: boolean; creatorId: string; highlightIds: Set<string>; clearHighlight: (id: string) => void; joinCode: string }) {
-  const sorted = [...songs].sort((a, b) => {
-    const dedupA = new Map<string, number>();
-    for (const v of a.votes) dedupA.set(v.voterId, v.value);
-    const dedupB = new Map<string, number>();
-    for (const v of b.votes) dedupB.set(v.voterId, v.value);
-    const scoreA = Array.from(dedupA.values()).reduce((s, v) => s + v, 0);
-    const scoreB = Array.from(dedupB.values()).reduce((s, v) => s + v, 0);
-    if (scoreB !== scoreA) return scoreB - scoreA;
-    return a.createdAt - b.createdAt;
-  });
+export default function SongQueue({ songs, nowPlaying, eventId, userId, isHost, creatorId, highlightIds, clearHighlight, joinCode }: { songs: SongRow[]; nowPlaying?: SongRow; eventId: string; userId: string; isHost: boolean; creatorId: string; highlightIds: Set<string>; clearHighlight: (id: string) => void; joinCode: string }) {
+  const upcoming = [...songs]
+    .filter((s) => !s.playedAt && s.id !== nowPlaying?.id)
+    .sort((a, b) => {
+      const dedupA = new Map<string, number>();
+      for (const v of a.votes) dedupA.set(v.voterId, v.value);
+      const dedupB = new Map<string, number>();
+      for (const v of b.votes) dedupB.set(v.voterId, v.value);
+      const scoreA = Array.from(dedupA.values()).reduce((s, v) => s + v, 0);
+      const scoreB = Array.from(dedupB.values()).reduce((s, v) => s + v, 0);
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return a.createdAt - b.createdAt;
+    });
 
-  if (sorted.length === 0) {
+  if (!nowPlaying && upcoming.length === 0) {
     return isHost ? (
       <HostEmptyState joinCode={joinCode} />
     ) : (
@@ -34,20 +36,33 @@ export default function SongQueue({ songs, userId, isHost, creatorId, highlightI
   }
 
   return (
-    <section>
-      <h2 className="mb-3 text-sm font-semibold text-text-muted">
-        Queue &middot; {sorted.length} {sorted.length === 1 ? "song" : "songs"}
-      </h2>
-      <ul className="space-y-2">
-        {sorted.map((song, i) => (
-          <SongCard key={song.id} song={song} userId={userId} isHost={isHost} creatorId={creatorId} position={i + 1} isHighlighted={highlightIds.has(song.id)} clearHighlight={clearHighlight} />
-        ))}
-      </ul>
+    <section className="space-y-4">
+      {nowPlaying && (
+        <div>
+          <h2 className="mb-2 text-sm font-semibold text-brand-gold">Now Playing</h2>
+          <ul>
+            <SongCard key={nowPlaying.id} song={nowPlaying} userId={userId} isHost={isHost} creatorId={creatorId} position={0} variant="nowPlaying" eventId={eventId} isHighlighted={highlightIds.has(nowPlaying.id)} clearHighlight={clearHighlight} />
+          </ul>
+        </div>
+      )}
+      {upcoming.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-text-muted">
+            Up Next &middot; {upcoming.length} {upcoming.length === 1 ? "song" : "songs"}
+          </h2>
+          <ul className="space-y-2">
+            {upcoming.map((song, i) => (
+              <SongCard key={song.id} song={song} userId={userId} isHost={isHost} creatorId={creatorId} position={i + 1} eventId={eventId} isHighlighted={highlightIds.has(song.id)} clearHighlight={clearHighlight} />
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
 
-function SongCard({ song, userId, isHost, creatorId, position, isHighlighted, clearHighlight }: { song: SongRow; userId: string; isHost: boolean; creatorId: string; position: number; isHighlighted: boolean; clearHighlight: (id: string) => void }) {
+function SongCard({ song, userId, isHost, creatorId, position, variant, eventId, isHighlighted, clearHighlight }: { song: SongRow; userId: string; isHost: boolean; creatorId: string; position: number; variant?: "nowPlaying"; eventId: string; isHighlighted: boolean; clearHighlight: (id: string) => void }) {
+  const isNowPlaying = variant === "nowPlaying";
   const [pendingVote, setPendingVote] = useState<1 | -1 | null>(null);
 
   const userVote = song.votes.find((v) => v.voterId === userId);
@@ -67,8 +82,8 @@ function SongCard({ song, userId, isHost, creatorId, position, isHighlighted, cl
   const canVote = !isOwnSong && !hasVoted;
   const isDjPick = song.submittedBy === creatorId;
   const isCjPick = score >= CJ_PICK_THRESHOLD;
-  const isTop3 = position <= 3;
-  const artSize = isTop3 ? "h-12 w-12" : "h-10 w-10";
+  const isTop3 = !isNowPlaying && position <= 3;
+  const artSize = isNowPlaying || isTop3 ? "h-12 w-12" : "h-10 w-10";
 
   const rankBadgeCls =
     position === 1
@@ -126,12 +141,26 @@ function SongCard({ song, userId, isHost, creatorId, position, isHighlighted, cl
   return (
     <li
       ref={cardRef}
-      className={cn("flex flex-wrap items-center gap-2 rounded-xl border border-white/5 bg-canvas-elevated px-4 py-3 sm:flex-nowrap sm:gap-4", position === 1 && "border-l-2 border-l-brand-gold/40", isHighlighted && "animate-song-highlight")}
+      className={cn(
+        "flex flex-wrap items-center gap-2 rounded-xl border bg-canvas-elevated px-4 py-3 sm:flex-nowrap sm:gap-4",
+        isNowPlaying
+          ? "border-brand-gold/30 shadow-[0_0_12px_-4px_rgba(255,186,8,0.25)]"
+          : "border-white/5",
+        !isNowPlaying && position === 1 && "border-l-2 border-l-brand-gold/40",
+        isHighlighted && "animate-song-highlight",
+      )}
       onAnimationEnd={(e) => {
         if (e.animationName === "song-highlight") clearHighlight(song.id);
       }}
     >
-      {isTop3 ? (
+      {isNowPlaying ? (
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-brand-gold">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 animate-pulse">
+            <path d="M10 3.75a.75.75 0 0 0-1.264-.546L4.703 7H3.167a.75.75 0 0 0-.7.48A6.985 6.985 0 0 0 2 10c0 .887.165 1.737.468 2.52.111.29.39.48.699.48h1.535l4.033 3.796A.75.75 0 0 0 10 16.25V3.75ZM15.95 5.05a.75.75 0 0 0-1.06 1.06 5.5 5.5 0 0 1 0 7.78.75.75 0 0 0 1.06 1.06 7 7 0 0 0 0-9.9Z" />
+            <path d="M13.829 7.172a.75.75 0 0 0-1.061 1.06 2.5 2.5 0 0 1 0 3.536.75.75 0 0 0 1.06 1.06 4 4 0 0 0 0-5.656Z" />
+          </svg>
+        </span>
+      ) : isTop3 ? (
         <span className={cn("shrink-0", rankBadgeCls)}>{position}</span>
       ) : (
         <span className="w-6 shrink-0 text-center text-xs font-medium tabular-nums text-text-muted/50">
@@ -236,6 +265,37 @@ function SongCard({ song, userId, isHost, creatorId, position, isHighlighted, cl
       <div className="basis-full h-0 sm:hidden" aria-hidden="true" />
 
       <div className="flex items-center gap-2 pl-20 ml-auto sm:ml-0 sm:pl-0">
+        {isHost && !isNowPlaying && (
+          <button
+            onClick={async () => {
+              try {
+                await db.transact(db.tx.events[eventId].link({ nowPlaying: song.id }));
+              } catch {}
+            }}
+            aria-label="Play now"
+            className="shrink-0 rounded p-1 text-brand-gold/50 transition hover:text-brand-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841Z" />
+            </svg>
+          </button>
+        )}
+        {isHost && isNowPlaying && (
+          <button
+            onClick={async () => {
+              try {
+                await db.transact([
+                  db.tx.songRequests[song.id].update({ playedAt: Date.now() }),
+                  db.tx.events[eventId].unlink({ nowPlaying: song.id }),
+                ]);
+              } catch {}
+            }}
+            aria-label="Mark as played"
+            className="shrink-0 rounded-md bg-brand-gold/10 px-2 py-1 text-xs font-semibold text-brand-gold transition hover:bg-brand-gold/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60"
+          >
+            Done
+          </button>
+        )}
         {song.url && (
           <a
             href={song.url}

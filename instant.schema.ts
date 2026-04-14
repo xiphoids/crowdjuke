@@ -35,6 +35,7 @@ const _schema = i.schema({
       createdAt: i.number(),
       durationMs: i.number().optional(),
       imageUrl: i.string().optional(),
+      playedAt: i.number().optional(),
       submittedBy: i.string(),
       title: i.string(),
       url: i.string().optional(),
@@ -94,6 +95,18 @@ const _schema = i.schema({
         on: "events",
         has: "many",
         label: "songRequests",
+      },
+    },
+    eventsNowPlaying: {
+      forward: {
+        on: "events",
+        has: "one",
+        label: "nowPlaying",
+      },
+      reverse: {
+        on: "songRequests",
+        has: "one",
+        label: "playingAtEvent",
       },
     },
     votesSongRequest: {

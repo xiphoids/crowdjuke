@@ -12,6 +12,7 @@ export type SongRow = {
   url?: string;
   imageUrl?: string;
   durationMs?: number;
+  playedAt?: number;
   submittedBy: string;
   createdAt: number;
   votes: VoteRow[];
@@ -22,6 +23,7 @@ export type EventRow = {
   name: string;
   joinCode: string;
   creatorId: string;
+  nowPlaying?: SongRow;
   songRequests: SongRow[];
   memberships: { id: string; userId: string }[];
 };
